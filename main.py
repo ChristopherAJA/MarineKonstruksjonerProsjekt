@@ -1,5 +1,10 @@
 import pickle
 
+class Element():
+
+class Knutepunkt(): #huska ikkje korleis ditte gjerast
+
+
 def konstruksjonsdata():
     knutepunkter = []
     elementer = []
@@ -22,3 +27,10 @@ def konstruksjonsdata():
         g = int(input("Geometritype for element",i,": "))
         elementer[i].g = geometri.g
         #har punktlast?
+
+
+def boyestivhet(element):
+    if element.g in range(n): #om rør
+        element.boy = (....)
+    else:                     #om I-profil
+        element.boy = (....)
