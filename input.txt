@@ -1,0 +1,24 @@
+9			# Antall knutepunkt
+0 0 1			# [x, y, Innspenning]
+0 10 0
+0 20 0
+10 20 0
+10 10 0
+10 0 0
+20 20 0
+20 10 0
+20 0 0
+10			# Antall element
+0 1 70854000 1		# [Lokal ende 1, Lokal ende 2, Elastisitetsmodul, Profil]
+1 2 70854000 1
+1 4 141708000 2
+2 3 70854000 2
+4 3 70854000 1
+5 4 70854000 1
+3 6 70854000 2
+4 7 141708000 1
+7 6 70854000 2
+8 7 70854000 1
+0			# Antall laster
+3 0 0 100 0 20 200     #[type, lok 1x ,lok 1y , størrelse 1, lok 2x/vinkel, lok 2y, størrelse2] (type 1 = punktlast, type 2 = moment, type 3 = fordelt) (lok2 om fordelt, vinkel om punkt)
+2 10                       #den første her er fordelt last fra (0,0) til (0,20) som er 100 n/m i første ende of 200 n/m i andre
