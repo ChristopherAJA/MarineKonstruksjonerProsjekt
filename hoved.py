@@ -56,6 +56,10 @@ def lengder(knutepunkt, element, nelem):
 
     return elementlengder
 
+def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
+
+    mom = np.mathlib.zeros((nelem,1))
+
 def main():
     # Rammeanalyse
 
