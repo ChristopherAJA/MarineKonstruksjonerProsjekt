@@ -46,8 +46,17 @@ def lesinput():
 
     nujamtlast = int(fid.readline())
     ujevntfordeltlast = np.loadtxt(fid, dtype = float, max_rows = nujamtlast)
-    for elem in ujevntfordeltlast:
-        for i in range(2,elem.size()):
+    if nujamtlast == 1:
+        q_start = ujevntfordeltlast[0]
+        q_slutt = ujevntfordeltlast[1]
+        q_current = q_start
+        q_old = q_start
+        for i in range(2,ujevntfordeltlast.size):
+            lastvec.append([3,ujevntfordeltlast[i],q_current])
+            q_old = q_current
+            q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
+            lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
+
 
 
 
@@ -113,11 +122,11 @@ def main():
     #endemoment = endeM(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
-    print("Rotasjoner i de ulike punktene:")
-    print(elem)
+    #print("Rotasjoner i de ulike punktene:")
+    print(last)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
-    print("Elementvis endemoment:")
+    #print("Elementvis endemoment:")
     #print(endemoment)
 
 main()
