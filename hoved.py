@@ -5,7 +5,7 @@ import numpy.matlib
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input2.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -56,20 +56,12 @@ def lesinput():
             q_old = q_current
             q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
             lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
-
-
-
-
     # Lukker input-filen
     fid.close()
-
     return npunkt, punkt, nelem, eleme, nlast, lastvec
-
-
 
 def lengder(knutepunkt, element, nelem):
     #print(knutepunkt)
-
     elementlengder = np.matlib.zeros((nelem, 1))
     # Beregner elementlengder med Pythagoras' laeresetning
     for i in range (0, nelem-1):
@@ -77,14 +69,34 @@ def lengder(knutepunkt, element, nelem):
         dx = knutepunkt[element[i, 0], 0] - knutepunkt[element[i, 1], 0]
         dy = knutepunkt[element[i, 0], 1] - knutepunkt[element[i, 1], 1]
         elementlengder[i] = np.sqrt(dx*dx + dy*dy)
-
     return elementlengder
 
 def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
+    mom = [0.0]*npunkt                                                      #liste over fim med knutepunktnummer som indeks
+    for tempLast in last:
 
-    mom = []
-    mom.append()
+        if tempLast[0] == 1:
+            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) *(tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/(elementlengder[int(tempLast[1])])**2)                                    #fim for ende a
 
+            mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
+
+        elif tempLast[0] ==2:
+            mom[tempLast[1]] += float(tempLast[2])
+
+        elif tempLast[0] == 3:
+            mom[int(elem[int(tempLast[1])][0])] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+
+            mom[int(elem[int(tempLast[1])][1])] += float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
+
+        elif tempLast[0] == 4:
+            mom[int(elem[int(tempLast[1])][0])] -= float((1/30)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+
+            mom[int(elem[int(tempLast[1])][1])] += float((1/20)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
+
+        else:
+            print("Feil i lastvektor")
+
+    return mom
 
 
 def main():
@@ -98,7 +110,9 @@ def main():
 
     # -----Fastinnspenningsmomentene------
     # Lag funksjon selv
-    #fim = moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
+
+
+    fim = moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
 
     # -----Setter opp lastvektor-----
     # Lag funksjon selv
@@ -123,7 +137,7 @@ def main():
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
-    print(last)
+    print(fim)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
