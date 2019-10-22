@@ -5,7 +5,7 @@ import numpy.matlib
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_test.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -28,6 +28,7 @@ def lesinput():
     # E-modul for materiale lagres i kolonne 3
     # Tverrsnittstype lagres i kolonne 4, I-profil = 1 og rørprofil = 2
     eleme = np.loadtxt(fid, dtype = int, max_rows = nelem)
+    #print(eleme)
 
     # Leser antall laster som virker på rammen
     nlast = int(fid.readline())
@@ -45,17 +46,18 @@ def lesinput():
             lastvec.append([3,elem[1],elem[2]])
 
     nujamtlast = int(fid.readline())
-    ujevntfordeltlast = np.loadtxt(fid, dtype = float, max_rows = nujamtlast)
-    if nujamtlast == 1:
-        q_start = ujevntfordeltlast[0]
-        q_slutt = ujevntfordeltlast[1]
-        q_current = q_start
-        q_old = q_start
-        for i in range(2,ujevntfordeltlast.size):
-            lastvec.append([3,ujevntfordeltlast[i],q_current])
-            q_old = q_current
-            q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
-            lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
+    if nujamtlast > 0:
+        ujevntfordeltlast = np.loadtxt(fid, dtype = float, max_rows = nujamtlast)
+        if nujamtlast == 1:
+            q_start = ujevntfordeltlast[0]
+            q_slutt = ujevntfordeltlast[1]
+            q_current = q_start
+            q_old = q_start
+            for i in range(2,ujevntfordeltlast.size):
+                lastvec.append([3,ujevntfordeltlast[i],q_current])
+                q_old = q_current
+                q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
+                lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
     # Lukker input-filen
     fid.close()
     return npunkt, punkt, nelem, eleme, nlast, lastvec
@@ -64,11 +66,12 @@ def lengder(knutepunkt, element, nelem):
     #print(knutepunkt)
     elementlengder = np.matlib.zeros((nelem, 1))
     # Beregner elementlengder med Pythagoras' laeresetning
-    for i in range (0, nelem-1):
+    for i in range (0, nelem):
         # OBS! Grunnet indekseringsyntaks i Python-arrays vil ikke denne funksjonen fungere naar vi bare har ett element.
         dx = knutepunkt[element[i, 0], 0] - knutepunkt[element[i, 1], 0]
         dy = knutepunkt[element[i, 0], 1] - knutepunkt[element[i, 1], 1]
         elementlengder[i] = np.sqrt(dx*dx + dy*dy)
+        #print(elementlengder[i])
     return elementlengder
 
 def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
@@ -81,7 +84,7 @@ def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
             mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
 
         elif tempLast[0] ==2:
-            mom[tempLast[1]] += float(tempLast[2])
+            mom[int(tempLast[1])] += float(tempLast[2])
 
         elif tempLast[0] == 3:
             mom[int(elem[int(tempLast[1])][0])] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
@@ -98,13 +101,45 @@ def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
 
     return mom
 
+def treghetsMoment(profil):
+    if profil == 1:
+        return 100
+    elif profil == 2:
+        return 200
+    else:
+        print("feil profil")
+        return 0
 
+def stivhet(nelem, elem, elementlengder, npunkt):
+    stivhetsmatrise = [[0 for x in range(npunkt)] for y in range(npunkt)]
+    #print(stivhetsmatrise)
+    #stivhetsmatrise[0][0] +=1
+    #print(stivhetsmatrise[0][0])
+    counter = 0
+    for tempElem in elem:
+
+        p00 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
+        p01 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
+        p10 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
+        p11 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
+
+
+
+        #stivhetsmatrise[int(tempElem[0])][int(tempElem[0])]
+
+        stivhetsmatrise[int(tempElem[0])][int(tempElem[0])] += p00
+        stivhetsmatrise[int(tempElem[1])][int(tempElem[1])] += p11
+
+        stivhetsmatrise[int(tempElem[0])][int(tempElem[1])] += p01
+        stivhetsmatrise[int(tempElem[1])][int(tempElem[0])] += p10
+        counter += 1
+
+    return stivhetsmatrise
 def main():
     # Rammeanalyse
 
     # -----Leser input-data-----
     npunkt, punkt, nelem, elem, nlast, last = lesinput()
-
     # -----Regner ut lengder til elementene------
     elementlengder = lengder(punkt, elem, nelem)
 
@@ -120,7 +155,7 @@ def main():
 
     # ------Setter opp systemstivhetsmatrisen-----
     # Lag funksjon selv
-    #K = stivhet(nelem, elem, elementlengder, npunkt)
+    K = stivhet(nelem, elem, elementlengder, npunkt)
 
     # ------Innfører randbetingelser------
     # Lag funksjon selv
@@ -137,7 +172,7 @@ def main():
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
-    print(fim)
+    print(K)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
