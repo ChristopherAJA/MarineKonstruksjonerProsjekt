@@ -2,6 +2,12 @@ import numpy as np
 import numpy.matlib
 
 
+profiler = [
+[5.7, 4.1, 100, 55],
+[100, 10]
+] # flens, steg, høyde, bredde.    radius, tykkelse
+
+
 def lesinput():
 
     # Åpner inputfilen
@@ -102,30 +108,24 @@ def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     return mom
 
 def treghetsMoment(profil):
-    if profil == 1:
-        return 100
-    elif profil == 2:
-        return 200
+    if profil == 1: #returnerer I for I-profil med dimensjoner fra profiler.
+        return ((profiler[0][2]**3)*profiler[0][1])/12 + 2*((((profiler[0][0]**3)*profiler[0][3])/12)+(((profiler[0][2]-profiler[0][0])/2)**2)*(profiler[0][0]*profiler[0][3]))
+    elif profil == 2: #returnerer I for rør med dimensjoner fra profiler.
+        return 2*np.pi*(profiler[1][0]**3)*(profiler[1][1])
     else:
         print("feil profil")
         return 0
 
 def stivhet(nelem, elem, elementlengder, npunkt):
-    stivhetsmatrise = [[0 for x in range(npunkt)] for y in range(npunkt)]
-    #print(stivhetsmatrise)
-    #stivhetsmatrise[0][0] +=1
-    #print(stivhetsmatrise[0][0])
+    stivhetsmatrise = np.array([[0 for x in range(npunkt)] for y in range(npunkt)], dtype=np.float64)
     counter = 0
     for tempElem in elem:
 
-        p00 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
+        p00 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter])) #E-modul må ganges med 10^6 for å få pascal
         p01 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
         p10 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
         p11 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
 
-
-
-        #stivhetsmatrise[int(tempElem[0])][int(tempElem[0])]
 
         stivhetsmatrise[int(tempElem[0])][int(tempElem[0])] += p00
         stivhetsmatrise[int(tempElem[1])][int(tempElem[1])] += p11
@@ -135,6 +135,7 @@ def stivhet(nelem, elem, elementlengder, npunkt):
         counter += 1
 
     return stivhetsmatrise
+
 def main():
     # Rammeanalyse
 
@@ -163,7 +164,7 @@ def main():
 
     # -----Løser ligningssystemet------
     # Lag funksjon selv
-    #rot = ...
+    rot = np.linalg.solve(K,fim)
     # Hint, se side for løsing av lineære systemer i Python
 
     #------Finner endemoment for hvert element-----
@@ -172,7 +173,7 @@ def main():
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
-    print(K)
+    print(rot)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
