@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.matlib
+from pandas import *
 
 
 profiler = [
@@ -11,7 +12,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input_test.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -136,6 +137,14 @@ def stivhet(nelem, elem, elementlengder, npunkt):
 
     return stivhetsmatrise
 
+def printMatrix(matrise):
+    for rad in matrise:
+        for element in rad:
+            print(element,end="\t")
+        print()
+
+
+
 def main():
     # Rammeanalyse
 
@@ -173,10 +182,11 @@ def main():
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
-    print(rot)
+    #print(rot)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
+    print(DataFrame(K))
 
 main()
