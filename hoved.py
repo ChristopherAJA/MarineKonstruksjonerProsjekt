@@ -5,15 +5,15 @@ from pandas import *
 #Bruker studentnr til "Ole Bendik" = xxxx80 -> A = 8 && B = 0
 
 profiler = [
-[5.7, 4.1, 100, 55],
-[100, 10]
-] # flens, steg, høyde, bredde.    radius, tykkelse
+[0.0057, 0.0041, 0.1, 0.055],
+[0.1, 0.01]
+] # I-profil (flens, steg, høyde, bredde).   Rør (radius, tykkelse)
 
 
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input_test.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -81,6 +81,22 @@ def lengder(knutepunkt, element, nelem):
         elementlengder[i] = np.sqrt(dx*dx + dy*dy)
         #print(elementlengder[i])
     return elementlengder
+
+def midtpunktsLaster(nelem, elementlengder, nlast, last):
+    midtLaster =  [0.0]*nelem
+    for i in range(0, len(last)):
+        if last[i][0] == 1: # Punktlast
+            midtLaster[int(last[i][1])] += float(last[i][3] * \
+                                     np.cos(last[i][4]) * \
+                                     last[i][2] * (elementlengder[int(last[i][1])] - last[i][2]))
+
+        elif last[i][0] == 3:  # Jevnlast
+            midtLaster[int(last[i][1])] += float((last[i][2] * (elementlengder[int(last[i][1])]**2))/8)
+
+        elif last[i][0] == 4:  # Ujevnlast
+            midtLaster[int(last[i][1])] += float((last[i][2] * elementlengder[int(last[i][1])]**2)/16)
+    return midtLaster
+
 
 def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     mom = [0.0]*npunkt #liste over fim med knutepunktnummer som indeks
@@ -156,7 +172,7 @@ def randbetingelser(npunkt, punkt, K, b):
             Kn[i][i] = 1337     #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
     return Kn, Bn
 
-def printMatrix(matrise):
+def prettyPrint(matrise):
      print(DataFrame(matrise))
 
 def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
@@ -196,6 +212,9 @@ def main():
 
     fim, b = momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
 
+    #Regner ut bøyemomentet for midtpunktene på hver element
+    mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last)
+
     # -----Setter opp lastvektor-----
     # Lag funksjon selv
     #b = lastvektor(fim, npunkt, punkt, nelem, elem)
@@ -227,6 +246,7 @@ def main():
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
-    print(DataFrame(endemoment))
+    #prettyPrint(endemoment)
+    prettyPrint(mpLaster)
 
 main()
