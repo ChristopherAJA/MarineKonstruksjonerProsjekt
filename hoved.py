@@ -13,7 +13,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_test.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -88,7 +88,7 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     for tempLast in last:
 
         if tempLast[0] == 1:    # Moment fra punktlast
-            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) *(tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/(elementlengder[int(tempLast[1])])**2)                                    #fim for ende a
+            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/(elementlengder[int(tempLast[1])])**2)                                    #fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
             mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
@@ -138,19 +138,49 @@ def stivhetsMatrise(nelem, elem, elementlengder, npunkt):
         stivhetsmatrise[int(tempElem[0])][int(tempElem[0])] += p00
         stivhetsmatrise[int(tempElem[1])][int(tempElem[1])] += p11
 
-        stivhetsmatrise[int(tempElem[0])][int(tempElem[1])] += p01
-        stivhetsmatrise[int(tempElem[1])][int(tempElem[0])] += p10
+        stivhetsmatrise[int(tempElem[1])][int(tempElem[0])] += p01
+        stivhetsmatrise[int(tempElem[0])][int(tempElem[1])] += p10
         counter += 1
 
     return stivhetsmatrise
 
+def randbetingelser(npunkt, punkt, K, b):
+    Kn = K
+    Bn = b
+    for i in range(0, npunkt):
+        if punkt[i][2] == 1:
+            for j in range(0, npunkt):
+                Kn[i][j] = 0
+                Kn[j][i] = 0    #setter her rad og kolonne lik 0 i stivhetsmatrise
+            Bn[i] = 0           #Nuller ut tilsvarende element i lastvektoren
+            Kn[i][i] = 1337     #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
+    return Kn, Bn
+
 def printMatrix(matrise):
-    for rad in matrise:
-        for element in rad:
-            print(element,end="\t")
-        print()
+     print(DataFrame(matrise))
 
+def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
+    basisM = [[0.0,0.0],[0.0,0.0]]
+    basisRot = [0.0,0.0]
+    endeM = []
 
+    for i in range(0, nelem):
+        basisM[0][0] = float(4 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
+        basisM[0][1] = float(2 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
+        basisM[1][0] = float(2 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
+        basisM[1][1] = float(4 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
+
+        basisRot[0] = rot[elem[i][0]]
+        basisRot[1] = rot[elem[i][1]]
+
+        basisTemp = np.matmul(basisM, basisRot)
+
+        basisTemp[0] += fim[elem[i][0]]
+        basisTemp[1] += fim[elem[i][1]]
+
+        endeM.append(basisTemp)
+
+    return endeM
 
 def main():
     # Rammeanalyse
@@ -176,16 +206,19 @@ def main():
 
     # ------Innfører randbetingelser------
     # Lag funksjon selv
-    #Kn, Bn = bc(npunkt, punkt, K, b)
+    Kn, Bn = randbetingelser(npunkt, punkt, K, b)
+
+    #printMatrix(Kn)
+    #printMatrix(Bn)
 
     # -----Løser ligningssystemet------
     # Lag funksjon selv
-    rot = np.linalg.solve(K,fim)
+    rot = np.linalg.solve(Kn, Bn)
     # Hint, se side for løsing av lineære systemer i Python
 
     #------Finner endemoment for hvert element-----
     # Lag funksjon selv
-    #endemoment = endeM(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
+    endemoment = endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
 
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
@@ -194,6 +227,6 @@ def main():
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
-    print(DataFrame(b))
+    print(DataFrame(endemoment))
 
 main()
