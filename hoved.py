@@ -2,6 +2,7 @@ import numpy as np
 import numpy.matlib
 from pandas import *
 
+#Bruker studentnr til "Ole Bendik" = xxxx80 -> A = 8 && B = 0
 
 profiler = [
 [5.7, 4.1, 100, 55],
@@ -81,32 +82,38 @@ def lengder(knutepunkt, element, nelem):
         #print(elementlengder[i])
     return elementlengder
 
-def moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
-    mom = [0.0]*npunkt                                                      #liste over fim med knutepunktnummer som indeks
+def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
+    mom = [0.0]*npunkt #liste over fim med knutepunktnummer som indeks
+    lastVektor = [0.0]*npunkt
     for tempLast in last:
 
-        if tempLast[0] == 1:
+        if tempLast[0] == 1:    # Moment fra punktlast
             mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) *(tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/(elementlengder[int(tempLast[1])])**2)                                    #fim for ende a
+            lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
             mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
+            lastVektor[int(elem[int(tempLast[1])][1])] -= float(((tempLast[3] * np.cos(tempLast[4])) * ((tempLast[2] ** 2) * (elementlengder[int(tempLast[1])] - tempLast[2]))) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende b
 
-        elif tempLast[0] ==2:
-            mom[int(tempLast[1])] += float(tempLast[2])
+        elif tempLast[0] == 2:  # Konsentrerte momenter i knutepunkt
+            lastVektor[int(tempLast[1])] += float(tempLast[2])
 
-        elif tempLast[0] == 3:
+        elif tempLast[0] == 3:  # Moment fra jevn fordelt last
             mom[int(elem[int(tempLast[1])][0])] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
 
             mom[int(elem[int(tempLast[1])][1])] += float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
+            lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
 
-        elif tempLast[0] == 4:
+        elif tempLast[0] == 4:  # Moment fra ujevn fordelt last
             mom[int(elem[int(tempLast[1])][0])] -= float((1/30)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 30) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
 
             mom[int(elem[int(tempLast[1])][1])] += float((1/20)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
-
+            lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 20) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
         else:
             print("Feil i lastvektor")
 
-    return mom
+    return mom, lastVektor
 
 def treghetsMoment(profil):
     if profil == 1: #returnerer I for I-profil med dimensjoner fra profiler.
@@ -117,7 +124,7 @@ def treghetsMoment(profil):
         print("feil profil")
         return 0
 
-def stivhet(nelem, elem, elementlengder, npunkt):
+def stivhetsMatrise(nelem, elem, elementlengder, npunkt):
     stivhetsmatrise = np.array([[0 for x in range(npunkt)] for y in range(npunkt)], dtype=np.float64)
     counter = 0
     for tempElem in elem:
@@ -157,7 +164,7 @@ def main():
     # Lag funksjon selv
 
 
-    fim = moment(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
+    fim, b = momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
 
     # -----Setter opp lastvektor-----
     # Lag funksjon selv
@@ -165,7 +172,7 @@ def main():
 
     # ------Setter opp systemstivhetsmatrisen-----
     # Lag funksjon selv
-    K = stivhet(nelem, elem, elementlengder, npunkt)
+    K = stivhetsMatrise(nelem, elem, elementlengder, npunkt)
 
     # ------Innfører randbetingelser------
     # Lag funksjon selv
@@ -187,6 +194,6 @@ def main():
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
-    print(DataFrame(K))
+    print(DataFrame(b))
 
 main()

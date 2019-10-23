@@ -51,7 +51,7 @@
 
 
 
-#[type, element, a , størrelse 1, lok 2x/vinkel, lok 2y, størrelse2] (type 1 = punktlast, type 2 = moment, type 3 = fordelt, type 4 = ujevn) (lok2 om fordelt, vinkel om punkt)
+#[type, element, a , størrelse 1, lok 2x/vinkel, lok 2y, størrelse2] (type 1 = punktlast, type 2 = konsentrert moment, type 3 = fordelt, type 4 = ujevn) (lok2 om fordelt, vinkel om punkt)
 #fyll resten med 0 om type 1 eller 2
 #[1, element, a, størrelse, vinkel]
 #[2, knutepunkt, størrelse]
