@@ -13,7 +13,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_test.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -82,19 +82,25 @@ def lengder(knutepunkt, element, nelem):
         #print(elementlengder[i])
     return elementlengder
 
-def midtpunktsLaster(nelem, elementlengder, nlast, last):
+def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM):
     midtLaster =  [0.0]*nelem
     for i in range(0, len(last)):
         if last[i][0] == 1: # Punktlast
-            midtLaster[int(last[i][1])] += float(last[i][3] * \
-                                     np.cos(last[i][4]) * \
-                                     last[i][2] * (elementlengder[int(last[i][1])] - last[i][2]))
+            midtLaster[int(last[i][1])] += float(((last[i][3] * \
+                                        np.cos(last[i][4]) * \
+                                        last[i][2] * \
+                                        (elementlengder[int(last[i][1])] - last[i][2]))/(elementlengder[int(last[i][1])])) + \
+                                        (((endeM[i][0] * last[i][2] * \
+                                        (elementlengder[int(last[i][1])])) / elementlengder[int(last[i][1])]) - \
+                                        (endeM[i][1] * last[i][2]) / elementlengder[int(last[i][1])]))
 
         elif last[i][0] == 3:  # Jevnlast
-            midtLaster[int(last[i][1])] += float((last[i][2] * (elementlengder[int(last[i][1])]**2))/8)
+            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/8) + \
+                                                 (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
 
         elif last[i][0] == 4:  # Ujevnlast
-            midtLaster[int(last[i][1])] += float((last[i][2] * elementlengder[int(last[i][1])]**2)/16)
+            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16) + \
+                                                 (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
     return midtLaster
 
 
@@ -104,7 +110,7 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     for tempLast in last:
 
         if tempLast[0] == 1:    # Moment fra punktlast
-            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/(elementlengder[int(tempLast[1])])**2)                                    #fim for ende a
+            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                                    #fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
             mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
@@ -115,14 +121,14 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
 
         elif tempLast[0] == 3:  # Moment fra jevn fordelt last
             mom[int(elem[int(tempLast[1])][0])] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
-            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
+            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
             mom[int(elem[int(tempLast[1])][1])] += float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
-            lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
+            lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
         elif tempLast[0] == 4:  # Moment fra ujevn fordelt last
             mom[int(elem[int(tempLast[1])][0])] -= float((1/30)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
-            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 30) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
+            lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 30) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
             mom[int(elem[int(tempLast[1])][1])] += float((1/20)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
             lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 20) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
@@ -217,7 +223,6 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
             if np.abs(j/(motstandsmoment*flytespenning)) > currentMax:
                 currentMax = j/(motstandsmoment*flytespenning)
                 currentEle = i
-                print(currentMax, currentEle)
 
     for i, mom in enumerate(midtPunktsLaster):
         if element[i][3] == 1:
@@ -230,9 +235,8 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
         if np.abs(i / (motstandsmoment * flytespenning)) > currentMax:
             currentMax = i / (motstandsmoment*flytespenning)
             currentEle = i
-            print(currentMax, currentEle)
 
-    print("Max Element:", currentEle, "Max belastning:", currentMax)
+    print("Bjelke: ", currentEle, "Max mom: ", currentMax)
     return currentEle, currentMax
 
 
@@ -254,7 +258,6 @@ def main():
     fim, b = momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
 
     #Regner ut bøyemomentet for midtpunktene på hver element
-    mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last)
 
     # -----Setter opp lastvektor-----
     # Lag funksjon selv
@@ -283,12 +286,12 @@ def main():
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
     #print(rot)
+    mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment)
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
-    #prettyPrint(endemoment)
-    #prettyPrint(mpLaster)
+    prettyPrint(rot)
 
 main()
