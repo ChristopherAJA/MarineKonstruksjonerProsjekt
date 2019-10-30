@@ -32,19 +32,17 @@ def lesinput():
     # Elementnummer tilsvarer radnummer i "Elem-variabel"
     # Knutepunktnummer for lokal ende 1 lagres i kolonne 1
     # Knutepunktnummer for lokal ende 2 lagres i kolonne 2
-    # Det anbefales at knutepunktnummerering starter på 0, slik at det samsvarerer med listeindeksering i Python
     # E-modul for materiale lagres i kolonne 3
     # Tverrsnittstype lagres i kolonne 4, I-profil = 1 og rørprofil = 2
     eleme = np.loadtxt(fid, dtype = int, max_rows = nelem)
-    #print(eleme)
 
     # Leser antall laster som virker på rammen
     nlast = int(fid.readline())
 
-    # Leser lastdata
-    # Bestem selv verdiene som er nødvendig å lese inn, samt hva verdiene som leses inn skal representere
+    # Leser antall laster som ikke er ujevnt fordelt
     last = np.loadtxt(fid, dtype = float, max_rows = nlast)
-    lastvec = []     # <-- Forslag til innlesing av lastdata
+    lastvec = []
+    # leser inn lastene og kategoriserer
     for elem in last:
         if elem[0]==1:
             lastvec.append([1,elem[1],elem[2],elem[3],elem[4]])
@@ -53,7 +51,9 @@ def lesinput():
         elif elem[0]==3:
             lastvec.append([3,elem[1],elem[2]])
 
+    # leser inn ujevnt fordelte laster
     nujamtlast = int(fid.readline())
+
     if nujamtlast > 0:
         ujevntfordeltlast = np.loadtxt(fid, dtype = float, max_rows = nujamtlast)
         if nujamtlast == 1:
@@ -66,12 +66,12 @@ def lesinput():
                 q_old = q_current
                 q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
                 lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
+
     # Lukker input-filen
     fid.close()
     return npunkt, punkt, nelem, eleme, nlast, lastvec
 
 def lengder(knutepunkt, element, nelem):
-    #print(knutepunkt)
     elementlengder = np.matlib.zeros((nelem, 1))
     # Beregner elementlengder med Pythagoras' laeresetning
     for i in range (0, nelem):
@@ -79,7 +79,6 @@ def lengder(knutepunkt, element, nelem):
         dx = knutepunkt[element[i, 0], 0] - knutepunkt[element[i, 1], 0]
         dy = knutepunkt[element[i, 0], 1] - knutepunkt[element[i, 1], 1]
         elementlengder[i] = np.sqrt(dx*dx + dy*dy)
-        #print(elementlengder[i])
     return elementlengder
 
 def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM):
@@ -109,11 +108,13 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     lastVektor = [0.0]*npunkt
     for tempLast in last:
 
+        # legger til negativt fastinnspenningsmoment i lastvektoren i tillegg
+
         if tempLast[0] == 1:    # Moment fra punktlast
-            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                                    #fim for ende a
+            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                   # fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
-            mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                                    #fim for ende b
+            mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                      # fim for ende b
             lastVektor[int(elem[int(tempLast[1])][1])] -= float(((tempLast[3] * np.cos(tempLast[4])) * ((tempLast[2] ** 2) * (elementlengder[int(tempLast[1])] - tempLast[2]))) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende b
 
         elif tempLast[0] == 2:  # Konsentrerte momenter i knutepunkt
@@ -205,7 +206,7 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
     return endeM
 
 def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
-    flytespenning = 355*10**6 # Pascal
+    flytespenning = 355*(10**6) # Pascal
     currentMax = 0
     currentEle = 0
     distanseFraNoytralakse = 0
@@ -244,54 +245,33 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
 
 
 def main():
-    # Rammeanalyse
-
     # -----Leser input-data-----
     npunkt, punkt, nelem, elem, nlast, last = lesinput()
+
     # -----Regner ut lengder til elementene------
     elementlengder = lengder(punkt, elem, nelem)
 
-    # -----Fastinnspenningsmomentene------
-    # Lag funksjon selv
-
-
+    # -----Setter opp lastvektor og fastinnspenningsmoment-----
     fim, b = momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder)
 
-    #Regner ut bøyemomentet for midtpunktene på hver element
-
-    # -----Setter opp lastvektor-----
-    # Lag funksjon selv
-    #b = lastvektor(fim, npunkt, punkt, nelem, elem)
-
     # ------Setter opp systemstivhetsmatrisen-----
-    # Lag funksjon selv
     K = stivhetsMatrise(nelem, elem, elementlengder, npunkt)
 
     # ------Innfører randbetingelser------
-    # Lag funksjon selv
     Kn, Bn = randbetingelser(npunkt, punkt, K, b)
 
-    #printMatrix(Kn)
-    #printMatrix(Bn)
-
     # -----Løser ligningssystemet------
-    # Lag funksjon selv
     rot = np.linalg.solve(Kn, Bn)
-    # Hint, se side for løsing av lineære systemer i Python
 
     #------Finner endemoment for hvert element-----
-    # Lag funksjon selv
     endemoment = endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
 
-    #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
-    #print("Rotasjoner i de ulike punktene:")
-    #print(rot)
+    #------Finner moment midt på / under punktlast for hvert element-----
     mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment)
+
+    #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    #-----Skriver ut hva momentene ble for de forskjellige elementene-----
-    #print("Elementvis endemoment:")
-    #print(endemoment)
     prettyPrint(rot)
 
 main()
