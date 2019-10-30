@@ -5,8 +5,8 @@ from pandas import *
 #Bruker studentnr til "Ole Bendik" = xxxx80 -> A = 8 && B = 0
 
 profiler = [
-[0.0057, 0.0041, 0.1, 0.055],
-[0.1, 0.01]
+[0.0135, 0.0086, 0.4, 0.18],
+[0.1, 0.02]
 ] # I-profil (flens, steg, høyde, bredde).   Rør (radius, tykkelse)
 
 
@@ -198,6 +198,47 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
 
     return endeM
 
+def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
+    flytespenning = 355*10**6 # Pascal
+    currentMax = 0
+    currentEle = 0
+    distanseFraNoytralakse = 0
+    motstandsmoment = 0
+
+    for i, mom in enumerate(endeMoment):
+        if element[i][3] == 1:
+            distanseFraNoytralakse = profiler[0][2] / 2
+        elif element[i][3] == 2:
+            distanseFraNoytralakse = profiler[1][0]
+
+        for j in mom:
+            motstandsmoment = treghetsMoment(element[i][3]) / distanseFraNoytralakse
+
+            if np.abs(j/(motstandsmoment*flytespenning)) > currentMax:
+                currentMax = j/(motstandsmoment*flytespenning)
+                currentEle = i
+                print(currentMax, currentEle)
+
+    for i, mom in enumerate(midtPunktsLaster):
+        if element[i][3] == 1:
+            distanseFraNoytralakse = profiler[0][2] / 2
+        elif element[i][3] == 2:
+            distanseFraNoytralakse = profiler[1][0]
+
+        motstandsmoment = treghetsMoment(element[i][3]) / distanseFraNoytralakse
+
+        if np.abs(i / (motstandsmoment * flytespenning)) > currentMax:
+            currentMax = i / (motstandsmoment*flytespenning)
+            currentEle = i
+            print(currentMax, currentEle)
+
+    print("Max Element:", currentEle, "Max belastning:", currentMax)
+    return currentEle, currentMax
+
+
+
+
+
 def main():
     # Rammeanalyse
 
@@ -242,11 +283,12 @@ def main():
     #-----Skriver ut hva rotasjonen ble i de forskjellige nodene-----
     #print("Rotasjoner i de ulike punktene:")
     #print(rot)
+    kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
     #-----Skriver ut hva momentene ble for de forskjellige elementene-----
     #print("Elementvis endemoment:")
     #print(endemoment)
     #prettyPrint(endemoment)
-    prettyPrint(mpLaster)
+    #prettyPrint(mpLaster)
 
 main()
