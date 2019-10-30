@@ -5,15 +5,17 @@ from pandas import *
 #Bruker studentnr til "Ole Bendik" = xxxx80 -> A = 8 && B = 0
 
 profiler = [
-[0.0135, 0.0086, 0.4, 0.18],
-[0.1, 0.02]
+[0.019, 0.0012, 0.6, 0.22],
+[0.1, 0.02],
+[0.0127, 0.008, 0.36, 0.17],
+[0.1, 0.01]
 ] # I-profil (flens, steg, høyde, bredde).   Rør (radius, tykkelse)
 
 
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input_test.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -76,9 +78,9 @@ def lengder(knutepunkt, element, nelem):
     # Beregner elementlengder med Pythagoras' laeresetning
     for i in range (0, nelem):
         # OBS! Grunnet indekseringsyntaks i Python-arrays vil ikke denne funksjonen fungere naar vi bare har ett element.
-        dx = knutepunkt[element[i, 0], 0] - knutepunkt[element[i, 1], 0]
-        dy = knutepunkt[element[i, 0], 1] - knutepunkt[element[i, 1], 1]
-        elementlengder[i] = np.sqrt(dx*dx + dy*dy)
+        dx = knutepunkt[(element[i][0])][0] - knutepunkt[(element[i][1])][0]
+        dy = knutepunkt[(element[i][0])][1] - knutepunkt[(element[i][1])][1]
+        elementlengder[i] = np.sqrt((dx**2) + (dy**2))
     return elementlengder
 
 def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM):
@@ -139,10 +141,10 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     return mom, lastVektor
 
 def treghetsMoment(profil):
-    if profil == 1: #returnerer I for I-profil med dimensjoner fra profiler.
-        return ((profiler[0][2]**3)*profiler[0][1])/12 + 2*((((profiler[0][0]**3)*profiler[0][3])/12)+(((profiler[0][2]-profiler[0][0])/2)**2)*(profiler[0][0]*profiler[0][3]))
-    elif profil == 2: #returnerer I for rør med dimensjoner fra profiler.
-        return 2*np.pi*(profiler[1][0]**3)*(profiler[1][1])
+    if profil == 1 or profil == 3: #returnerer I for I-profil med dimensjoner fra profiler.
+        return ((((profiler[profil-1][2]-(2*profiler[profil-1][0]))**3)*profiler[profil-1][1])/12) + 2*((((profiler[profil-1][0]**3)*profiler[profil-1][3])/12)+(((profiler[profil-1][2]-profiler[profil-1][0])/2)**2)*(profiler[profil-1][0]*profiler[profil-1][3]))
+    elif profil == 2 or profil == 4: #returnerer I for rør med dimensjoner fra profiler.
+        return 2*np.pi*(profiler[profil-1][0]**3)*(profiler[profil-1][1])
     else:
         print("feil profil")
         return 0
@@ -210,20 +212,19 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
     currentMax = 0
     currentEle = 0
     distanseFraNoytralakse = 0
-    motstandsmoment = 0
 
     for i, mom in enumerate(endeMoment):
-        if element[i][3] == 1:
-            distanseFraNoytralakse = profiler[0][2] / 2
-        elif element[i][3] == 2:
-            distanseFraNoytralakse = profiler[1][0]
+        if element[i][3] == 1 or element[i][3] == 3:
+            distanseFraNoytralakse = profiler[(element[i][3]-1)][2] / 2     #Tversnitt bjelke
+        elif element[i][3] == 2 or element[i][3] == 4:
+            distanseFraNoytralakse = profiler[(element[i][3]-1)][0]         #Radius rør
 
         for j in mom:
             motstandsmoment = treghetsMoment(element[i][3]) / distanseFraNoytralakse
-
             if np.abs(j/(motstandsmoment*flytespenning)) > currentMax:
-                currentMax = j/(motstandsmoment*flytespenning)
+                currentMax = np.abs(j/(motstandsmoment*flytespenning))
                 currentEle = i
+                print("#Endemoment, ", "ele: ", currentEle,"max: ", currentMax)
 
     for i, mom in enumerate(midtPunktsLaster):
         if element[i][3] == 1:
@@ -232,16 +233,13 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
             distanseFraNoytralakse = profiler[1][0]
 
         motstandsmoment = treghetsMoment(element[i][3]) / distanseFraNoytralakse
-
-        if np.abs(i / (motstandsmoment * flytespenning)) > currentMax:
-            currentMax = i / (motstandsmoment*flytespenning)
+        if  np.abs(mom / (motstandsmoment * flytespenning)) > currentMax:
+            currentMax = np.abs(mom / (motstandsmoment*flytespenning))
             currentEle = i
+            print("#Midtpunktslast, ", "ele: ", currentEle, "max: ", currentMax)
 
     print("Bjelke: ", currentEle, "Max mom: ", currentMax)
     return currentEle, currentMax
-
-
-
 
 
 def main():
@@ -272,6 +270,8 @@ def main():
     #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    prettyPrint(rot)
+    #prettyPrint(mpLaster)
+    #prettyPrint(endemoment)
+
 
 main()
