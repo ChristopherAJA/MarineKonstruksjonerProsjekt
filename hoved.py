@@ -15,7 +15,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input_test.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -36,13 +36,13 @@ def lesinput():
     # Knutepunktnummer for lokal ende 2 lagres i kolonne 2
     # E-modul for materiale lagres i kolonne 3
     # Tverrsnittstype lagres i kolonne 4, I-profil = 1 og rørprofil = 2
-    eleme = np.loadtxt(fid, dtype = int, max_rows = nelem)
+    eleme = np.loadtxt(fid, dtype = np.int64, max_rows = nelem)
 
     # Leser antall laster som virker på rammen
     nlast = int(fid.readline())
 
     # Leser antall laster som ikke er ujevnt fordelt
-    last = np.loadtxt(fid, dtype = float, max_rows = nlast)
+    last = np.loadtxt(fid, dtype = np.float64, max_rows = nlast)
     lastvec = []
     # leser inn lastene og kategoriserer
     for elem in last:
@@ -57,7 +57,7 @@ def lesinput():
     nujamtlast = int(fid.readline())
 
     if nujamtlast > 0:
-        ujevntfordeltlast = np.loadtxt(fid, dtype = float, max_rows = nujamtlast)
+        ujevntfordeltlast = np.loadtxt(fid, dtype = np.float64, max_rows = nujamtlast)
         if nujamtlast == 1:
             q_start = ujevntfordeltlast[0]
             q_slutt = ujevntfordeltlast[1]
@@ -78,8 +78,8 @@ def lengder(knutepunkt, element, nelem):
     # Beregner elementlengder med Pythagoras' laeresetning
     for i in range (0, nelem):
         # OBS! Grunnet indekseringsyntaks i Python-arrays vil ikke denne funksjonen fungere naar vi bare har ett element.
-        dx = knutepunkt[(element[i][0])][0] - knutepunkt[(element[i][1])][0]
-        dy = knutepunkt[(element[i][0])][1] - knutepunkt[(element[i][1])][1]
+        dx = knutepunkt[int((element[i][0]))][0] - knutepunkt[int((element[i][1]))][0]
+        dy = knutepunkt[int((element[i][0]))][1] - knutepunkt[int((element[i][1]))][1]
         elementlengder[i] = np.sqrt((dx**2) + (dy**2))
     return elementlengder
 
@@ -142,9 +142,9 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
 
 def treghetsMoment(profil):
     if profil == 1 or profil == 3: #returnerer I for I-profil med dimensjoner fra profiler.
-        return ((((profiler[profil-1][2]-(2*profiler[profil-1][0]))**3)*profiler[profil-1][1])/12) + 2*((((profiler[profil-1][0]**3)*profiler[profil-1][3])/12)+(((profiler[profil-1][2]-profiler[profil-1][0])/2)**2)*(profiler[profil-1][0]*profiler[profil-1][3]))
+        return ((((profiler[int(profil)-1][2]-(2*profiler[int(profil)-1][0]))**3)*profiler[int(profil)-1][1])/12) + 2*((((profiler[int(profil)-1][0]**3)*profiler[int(profil)-1][3])/12)+(((profiler[int(profil)-1][2]-profiler[int(profil)-1][0])/2)**2)*(profiler[int(profil)-1][0]*profiler[int(profil)-1][3]))
     elif profil == 2 or profil == 4: #returnerer I for rør med dimensjoner fra profiler.
-        return 2*np.pi*(profiler[profil-1][0]**3)*(profiler[profil-1][1])
+        return 2*np.pi*(profiler[int(profil)-1][0]**3)*(profiler[int(profil)-1][1])
     else:
         print("feil profil")
         return 0
@@ -194,13 +194,13 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
         basisM[1][0] = float(2 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
         basisM[1][1] = float(4 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
 
-        basisRot[0] = rot[elem[i][0]]
-        basisRot[1] = rot[elem[i][1]]
+        basisRot[0] = rot[int(elem[i][0])]
+        basisRot[1] = rot[int(elem[i][1])]
 
         basisTemp = np.matmul(basisM, basisRot)
 
-        basisTemp[0] += fim[elem[i][0]]
-        basisTemp[1] += fim[elem[i][1]]
+        basisTemp[0] += fim[int(elem[i][0])]
+        basisTemp[1] += fim[int(elem[i][1])]
 
         endeM.append(basisTemp)
 
@@ -214,9 +214,9 @@ def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
 
     for i, mom in enumerate(endeMoment):
         if element[i][3] == 1 or element[i][3] == 3:
-            distanseFraNoytralakse = profiler[(element[i][3]-1)][2] / 2     #Tversnitt bjelke
+            distanseFraNoytralakse = profiler[int((element[i][3])-1)][2] / 2     #Tversnitt bjelke
         elif element[i][3] == 2 or element[i][3] == 4:
-            distanseFraNoytralakse = profiler[(element[i][3]-1)][0]         #Radius rør
+            distanseFraNoytralakse = profiler[(int(element[i][3])-1)][0]         #Radius rør
 
         for j in mom:
             motstandsmoment = treghetsMoment(element[i][3]) / distanseFraNoytralakse
@@ -269,7 +269,7 @@ def main():
     #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    prettyPrint(rot)
+    prettyPrint(mpLaster)
     #prettyPrint(endemoment)
 
 
