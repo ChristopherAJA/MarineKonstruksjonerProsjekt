@@ -15,7 +15,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_test.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -100,8 +100,8 @@ def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM):
                                                  (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
 
         elif last[i][0] == 4:  # Ujevnlast
-            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16) + \
-                                                 (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
+            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16))
+
     return midtLaster
 
 
@@ -154,11 +154,10 @@ def stivhetsMatrise(nelem, elem, elementlengder, npunkt):
     counter = 0
     for tempElem in elem:
 
-        p00 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter])) #E-modul må ganges med 10^6 for å få pascal
+        p00 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
         p01 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
         p10 = float((2 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
         p11 = float((4 * tempElem[2] * treghetsMoment(tempElem[3]))/float(elementlengder[counter]))
-
 
         stivhetsmatrise[int(tempElem[0])][int(tempElem[0])] += p00
         stivhetsmatrise[int(tempElem[1])][int(tempElem[1])] += p11
@@ -270,7 +269,7 @@ def main():
     #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    #prettyPrint(mpLaster)
+    prettyPrint(rot)
     #prettyPrint(endemoment)
 
 
