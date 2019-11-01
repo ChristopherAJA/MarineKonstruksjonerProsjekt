@@ -15,7 +15,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_test.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -46,11 +46,11 @@ def lesinput():
     lastvec = []
     # leser inn lastene og kategoriserer
     for elem in last:
-        if elem[0]==1:
+        if elem[0]==1: # punktlast
             lastvec.append([1,elem[1],elem[2],elem[3],elem[4]])
-        elif elem[0]==2:
+        elif elem[0]==2: # moment
             lastvec.append([2,elem[1],elem[2]])
-        elif elem[0]==3:
+        elif elem[0]==3: # jevnt fordelt last
             lastvec.append([3,elem[1],elem[2]])
 
     # leser inn ujevnt fordelte laster
@@ -83,24 +83,33 @@ def lengder(knutepunkt, element, nelem):
         elementlengder[i] = np.sqrt((dx**2) + (dy**2))
     return elementlengder
 
-def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM):
+def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM, elem):
     midtLaster =  [0.0]*nelem
-    for i in range(0, len(last)):
-        if last[i][0] == 1: # Punktlast
-            midtLaster[int(last[i][1])] += float(((last[i][3] * \
-                                        np.cos(last[i][4]) * \
-                                        last[i][2] * \
-                                        (elementlengder[int(last[i][1])] - last[i][2]))/(elementlengder[int(last[i][1])])) + \
-                                        (((endeM[i][0] * last[i][2] * \
-                                        (elementlengder[int(last[i][1])])) / elementlengder[int(last[i][1])]) - \
-                                        (endeM[i][1] * last[i][2]) / elementlengder[int(last[i][1])]))
+    for a in range(nelem):
+        hasLoad = False
+        for i in range(0, len(last)):
+            if last[i][1] == a:
+                if last[i][0] == 1: # Punktlast
+                    midtLaster[int(last[i][1])] += float(((last[i][3] * \
+                                                np.cos(last[i][4]) * \
+                                                last[i][2] * \
+                                                (elementlengder[int(last[i][1])] - last[i][2]))/(elementlengder[int(last[i][1])])) + \
+                                                (((endeM[i][0] * last[i][2] * \
+                                                (elementlengder[int(last[i][1])])) / elementlengder[int(last[i][1])]) - \
+                                                (endeM[i][1] * last[i][2]) / elementlengder[int(last[i][1])]))
+                    hasLoad = True
 
-        elif last[i][0] == 3:  # Jevnlast
-            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/8) + \
-                                                 (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
+                elif last[i][0] == 3:  # Jevnlast
+                    midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/8) + \
+                                                         (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
+                    hasLoad = True
 
-        elif last[i][0] == 4:  # Ujevnlast
-            midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16))
+
+                elif last[i][0] == 4:  # Ujevnlast
+                    midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16))
+                    hasLoad = True
+        if hasLoad == False:
+            midtLaster[a] += endeM[a][0] * 0.5 - endeM[a][1] * 0.5
 
     return midtLaster
 
@@ -177,7 +186,7 @@ def randbetingelser(npunkt, punkt, K, b):
                 Kn[i][j] = 0
                 Kn[j][i] = 0    #setter her rad og kolonne lik 0 i stivhetsmatrise
             Bn[i] = 0           #Nuller ut tilsvarende element i lastvektoren
-            Kn[i][i] = 1337     #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
+            Kn[i][i] = 1     #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
     return Kn, Bn
 
 def prettyPrint(matrise):
@@ -264,13 +273,13 @@ def main():
     endemoment = endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
 
     #------Finner moment midt på / under punktlast for hvert element-----
-    mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment)
+    mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment, elem)
 
     #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
+    prettyPrint(endemoment)
     prettyPrint(mpLaster)
-    #prettyPrint(endemoment)
 
 
 main()
