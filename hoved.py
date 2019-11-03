@@ -15,7 +15,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input_test.txt", "r")
+    fid = open("input3.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -85,23 +85,24 @@ def lengder(knutepunkt, element, nelem):
 
 def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM, elem):
     midtLaster =  [0.0]*nelem
-    for a in range(nelem):
+    for j in range(nelem):
         hasLoad = False
         for i in range(0, len(last)):
-            if last[i][1] == a:
+            if last[i][1] == j:
                 if last[i][0] == 1: # Punktlast
-                    midtLaster[int(last[i][1])] += float(((last[i][3] * \
-                                                np.cos(last[i][4]) * \
-                                                last[i][2] * \
-                                                (elementlengder[int(last[i][1])] - last[i][2]))/(elementlengder[int(last[i][1])])) + \
-                                                (((endeM[i][0] * last[i][2] * \
-                                                (elementlengder[int(last[i][1])])) / elementlengder[int(last[i][1])]) - \
-                                                (endeM[i][1] * last[i][2]) / elementlengder[int(last[i][1])]))
+                    P = last[i][3] * np.cos(last[i][4])
+                    a = last[i][2]
+                    b = float(elementlengder[int(last[i][1])] - last[i][2])
+                    l = float(elementlengder[int(last[i][1])])
+                    endeA = float((endeM[j][0] * b) / l)
+                    endeB = float((endeM[j][1] * a) / l)
+
+                    midtLaster[int(last[i][1])] = (P*a*b)/l + endeA + endeB
                     hasLoad = True
 
                 elif last[i][0] == 3:  # Jevnlast
                     midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/8) + \
-                                                         (endeM[i][0] * 0.5) - (endeM[i][1] * 0.5))
+                                                         (endeM[j][0] * 0.5) + (endeM[j][1] * 0.5))
                     hasLoad = True
 
 
@@ -109,7 +110,7 @@ def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM, elem):
                     midtLaster[int(last[i][1])] += float(((last[i][2] * (elementlengder[int(last[i][1])])**2)/16))
                     hasLoad = True
         if hasLoad == False:
-            midtLaster[a] += endeM[a][0] * 0.5 - endeM[a][1] * 0.5
+            midtLaster[j] += endeM[j][0] * 0.5 + endeM[j][1] * 0.5
 
     return midtLaster
 
@@ -197,6 +198,7 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
     basisM = [[0.0,0.0],[0.0,0.0]]
     basisRot = [0.0,0.0]
     endeM = []
+    endeMprint = []
 
     for i in range(0, nelem):
         basisM[0][0] = float(4 * ((elem[i][2] * treghetsMoment(elem[i][3])) / elementlengder[i]))
@@ -208,13 +210,20 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
         basisRot[1] = rot[int(elem[i][1])]
 
         basisTemp = np.matmul(basisM, basisRot)
-        #print(fim)
-        basisTemp[0] += float(fim[i][0])
-        basisTemp[1] += float(fim[i][1])
+
+        basisTemp[0] += (fim[i][0])
+        basisTemp[1] += (fim[i][1])
+
+        basisTemp[0] = round(basisTemp[0], 3)
+        basisTemp[1] = round(basisTemp[1], 3)
 
         endeM.append(basisTemp)
 
-    return endeM
+        basisTemp[1] = (-1) * round(basisTemp[1], 3)
+
+        endeMprint.append((basisTemp))
+
+    return endeM, endeMprint
 
 def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
     flytespenning = 355*(10**6) # Pascal
@@ -271,7 +280,7 @@ def main():
     rot = np.linalg.solve(Kn, Bn)
 
     #------Finner endemoment for hvert element-----
-    endemoment = endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
+    endemoment, endemomentPrint = endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim)
 
     #------Finner moment midt på / under punktlast for hvert element-----
     mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment, elem)
@@ -279,7 +288,7 @@ def main():
     #------Finner elementet med mest kritisk last-----
     #kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    prettyPrint(endemoment)
+    prettyPrint(endemomentPrint)
     prettyPrint(mpLaster)
     #prettyPrint(Kn)
 
