@@ -115,34 +115,35 @@ def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM, elem):
 
 
 def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
-    mom = [0.0]*npunkt #liste over fim med knutepunktnummer som indeks
+    mom = np.array([[0 for x in range(2)] for y in range(nelem)]  ) #liste over fim med elementnummer som indeks og ende 1 og 2 som subindeks
     lastVektor = [0.0]*npunkt
     for tempLast in last:
 
         # legger til negativt fastinnspenningsmoment i lastvektoren i tillegg
 
         if tempLast[0] == 1:    # Moment fra punktlast
-            mom[int(elem[int(tempLast[1])][0])] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                   # fim for ende a
+
+            mom[int(tempLast[1])][0] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                   # fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
-            mom[int(elem[int(tempLast[1])][1])] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                      # fim for ende b
+            mom[int(tempLast[1])][1] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                      # fim for ende b
             lastVektor[int(elem[int(tempLast[1])][1])] -= float(((tempLast[3] * np.cos(tempLast[4])) * ((tempLast[2] ** 2) * (elementlengder[int(tempLast[1])] - tempLast[2]))) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende b
 
         elif tempLast[0] == 2:  # Konsentrerte momenter i knutepunkt
             lastVektor[int(tempLast[1])] += float(tempLast[2])
 
         elif tempLast[0] == 3:  # Moment fra jevn fordelt last
-            mom[int(elem[int(tempLast[1])][0])] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+            mom[int(tempLast[1])][0] -= float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
-            mom[int(elem[int(tempLast[1])][1])] += float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
+            mom[int(tempLast[1])][1] += float((1/12)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
             lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 12) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
         elif tempLast[0] == 4:  # Moment fra ujevn fordelt last
-            mom[int(elem[int(tempLast[1])][0])] -= float((1/30)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
+            mom[int(tempLast[1])][0] -= float((1/30)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende a
             lastVektor[int(elem[int(tempLast[1])][0])] += float((1 / 30) * tempLast[2] * (elementlengder[int(tempLast[1])]) ** 2)
 
-            mom[int(elem[int(tempLast[1])][1])] += float((1/20)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
+            mom[int(tempLast[1])][1] += float((1/20)*tempLast[2]*(elementlengder[int(tempLast[1])]**2)) #fim for ende b
             lastVektor[int(elem[int(tempLast[1])][1])] -= float((1 / 20) * tempLast[2] * (elementlengder[int(tempLast[1])] ** 2))
         else:
             print("Feil i lastvektor")
@@ -207,9 +208,9 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
         basisRot[1] = rot[int(elem[i][1])]
 
         basisTemp = np.matmul(basisM, basisRot)
-
-        basisTemp[0] += fim[int(elem[i][0])]
-        basisTemp[1] += fim[int(elem[i][1])]
+        #print(fim)
+        basisTemp[0] += float(fim[i][0])
+        basisTemp[1] += float(fim[i][1])
 
         endeM.append(basisTemp)
 
@@ -276,10 +277,11 @@ def main():
     mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment, elem)
 
     #------Finner elementet med mest kritisk last-----
-    kritiskBelastedBjelke(endemoment, mpLaster, elem)
+    #kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
     prettyPrint(endemoment)
     prettyPrint(mpLaster)
+    #prettyPrint(Kn)
 
 
 main()
