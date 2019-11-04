@@ -2,14 +2,18 @@ import numpy as np
 import numpy.matlib
 from pandas import *
 
+
 #Bruker studentnr til "Ole Bendik" = xxxx80 -> A = 8 && B = 0
+
+# I-profil (flens, steg, høyde, bredde).
+# Rør (radius, tykkelse)
 
 profiler = [
 [0.019, 0.0012, 0.6, 0.22],
 [0.1, 0.02],
 [0.0127, 0.008, 0.36, 0.17],
 [0.1, 0.01]
-] # I-profil (flens, steg, høyde, bredde).   Rør (radius, tykkelse)
+]
 
 
 def lesinput():
@@ -58,16 +62,29 @@ def lesinput():
 
     if nujamtlast > 0:
         ujevntfordeltlast = np.loadtxt(fid, dtype = np.float64, max_rows = nujamtlast)
+
+        # Gjør sjekk på om det er kun 1 ujevnlast pga python array indeksering
         if nujamtlast == 1:
             q_start = ujevntfordeltlast[0]
             q_slutt = ujevntfordeltlast[1]
             q_current = q_start
-            q_old = q_start
             for i in range(2,ujevntfordeltlast.size):
                 lastvec.append([3,ujevntfordeltlast[i],q_current])
                 q_old = q_current
                 q_current +=((q_slutt-q_start)/(ujevntfordeltlast.size-2))
                 lastvec.append([4,ujevntfordeltlast[i],q_current-q_old])
+
+        elif nujamtlast >= 2:
+            for ujevn in ujevntfordeltlast:
+                q_start = ujevn[0]
+                q_slutt = ujevn[1]
+                q_current = q_start
+                for i in range(2, ujevn.size):
+                    lastvec.append([3, ujevn[i], q_current])
+                    q_old = q_current
+                    q_current += ((q_slutt - q_start) / (ujevn.size - 2))
+                    lastvec.append([4, ujevn[i], q_current - q_old])
+
 
     # Lukker input-filen
     fid.close()
@@ -75,6 +92,7 @@ def lesinput():
 
 def lengder(knutepunkt, element, nelem):
     elementlengder = np.matlib.zeros((nelem, 1))
+
     # Beregner elementlengder med Pythagoras' laeresetning
     for i in range (0, nelem):
         # OBS! Grunnet indekseringsyntaks i Python-arrays vil ikke denne funksjonen fungere naar vi bare har ett element.
@@ -115,12 +133,13 @@ def midtpunktsLaster(nelem, elementlengder, nlast, last, endeM, elem):
     return midtLaster
 
 
+
 def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
     mom = np.array([[0 for x in range(2)] for y in range(nelem)]  ) #liste over fim med elementnummer som indeks og ende 1 og 2 som subindeks
     lastVektor = [0.0]*npunkt
     for tempLast in last:
 
-        # legger til negativt fastinnspenningsmoment i lastvektoren i tillegg
+        # Legger til negativt fastinnspenningsmoment i lastvektoren i tillegg
 
         if tempLast[0] == 1:    # Moment fra punktlast
 
@@ -161,6 +180,7 @@ def treghetsMoment(profil):
         return 0
 
 def stivhetsMatrise(nelem, elem, elementlengder, npunkt):
+
     stivhetsmatrise = np.array([[0 for x in range(npunkt)] for y in range(npunkt)], dtype=np.float64)
     counter = 0
     for tempElem in elem:
@@ -185,10 +205,10 @@ def randbetingelser(npunkt, punkt, K, b):
     for i in range(0, npunkt):
         if punkt[i][2] == 1:
             for j in range(0, npunkt):
-                Kn[i][j] = 0
-                Kn[j][i] = 0    #setter her rad og kolonne lik 0 i stivhetsmatrise
+                Kn[i][j] = 0    #Setter her rad lik 0 i stivhetsmatrise
+                Kn[j][i] = 0    #Setter her kolonne lik 0 i stivhetsmatrise
             Bn[i] = 0           #Nuller ut tilsvarende element i lastvektoren
-            Kn[i][i] = 1     #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
+            Kn[i][i] = 1        #Setter diagonalelementet lik et vilkårlig tall for at matrisen skal bli inverterbar
     return Kn, Bn
 
 def prettyPrint(matrise):
@@ -226,6 +246,9 @@ def endeMoment(npunkt, punkt, nelem, elem, elementlengder, rot, fim):
     return endeM, endeMprint
 
 def kritiskBelastedBjelke(endeMoment, midtPunktsLaster, element):
+
+    # Finner den mest kritisk belastede bjelken med hensyn på E-modul og profil. Returnerer forholdet mellom de og flytspenningen.
+
     flytespenning = 355*(10**6) # Pascal
     currentMax = 0
     currentEle = 0
@@ -286,7 +309,7 @@ def main():
     mpLaster = midtpunktsLaster(nelem, elementlengder, nlast, last, endemoment, elem)
 
     #------Finner elementet med mest kritisk last-----
-    #kritiskBelastedBjelke(endemoment, mpLaster, elem)
+    kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
     prettyPrint(endemomentPrint)
     prettyPrint(mpLaster)
