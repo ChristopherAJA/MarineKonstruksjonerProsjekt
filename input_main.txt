@@ -16,7 +16,7 @@
 0 48 0
 18 48 0
 20
-0 4 210000000000 2
+0 4 210000000000 4
 1 5 210000000000 4
 2 6 210000000000 4
 3 7 210000000000 4
@@ -29,12 +29,12 @@
 7 11 210000000000 4
 8 9 210000000000 1
 9 10 210000000000 3
-10 11 210000000000 4
-8 12 210000000000 1
-9 13 210000000000 1
+10 11 210000000000 3
+8 12 210000000000 2
+9 13 210000000000 4
 12 13 210000000000 1
 12 14 210000000000 1
-13 15 210000000000 2
+13 15 210000000000 4
 14 15 210000000000 3
 8
 1 15 6 25000 0.7854
@@ -48,13 +48,18 @@
 1
 8000 17000 0 7 14 17
 
+#Format:
 
+#[antall knutepunkt]
+#[x-pos, y-pos, 1 = fast innspent 0 = ikke]
 
+#[antall element]
+#[knutepunkt i ende 1, knutepunkt i ende 2, E-modul i pascal, profiltype 1-4]  (1-ipe600, 2-rør. 3-ipe360, 4-rør)
 
+#[antall laster som ikke er ujevnt fordelt]
+#[1-punktlast, element det virker på, avstand fra ende 1 i meter, størrelse i Newton, vinkel i radianer]
+#[2-moment, knutepunkt det virker på, størrelse i Newtonmeter, 0, 0]  (nuller for å få like lange listeelement)
+#[3-jevnt fordelt last, element det virker på, størrelse i Newton per meter, 0, 0]  (nuller av samme grunn)
 
-#[type, element, a , størrelse 1, lok 2x/vinkel, lok 2y, størrelse2] (type 1 = punktlast, type 2 = moment, type 3 = fordelt, type 4 = ujevn) (lok2 om fordelt, vinkel om punkt)
-#fyll resten med 0 om type 1 eller 2
-#[1, element, a, størrelse, vinkel]
-#[2, knutepunkt, størrelse]
-#[3, element, størrelse]
-#[4, element, størrelse i ende 2]
+#[antall ujevnt fordelte laster]
+#[størrelse i ende 1 i N/m, størrelse i ende 2 i N/m, elementene lasten virker på i rekkefølge]
