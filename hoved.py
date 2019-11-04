@@ -19,7 +19,7 @@ profiler = [
 def lesinput():
 
     # Åpner inputfilen
-    fid = open("input3.txt", "r")
+    fid = open("input_main.txt", "r")
 
     # Leser totalt antall punkt
     npunkt = int(fid.readline())       # 'fid.readline()' leser en linje, 'int(...)' gjør at linjen tolkes som et heltall
@@ -143,11 +143,19 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
 
         if tempLast[0] == 1:    # Moment fra punktlast
 
-            mom[int(tempLast[1])][0] -= float(((tempLast[3]*np.cos(tempLast[4])) * (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2))/((elementlengder[int(tempLast[1])])**2))                   # fim for ende a
-            lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
+            mom[int(tempLast[1])][0] -= float(((tempLast[3]*np.cos(tempLast[4])) * \
+                                                (tempLast[2]*(elementlengder[int(tempLast[1])]-tempLast[2])**2)) \
+                                                /((elementlengder[int(tempLast[1])])**2))                   # fim for ende a
+            lastVektor[int(elem[int(tempLast[1])][0])] += float(((tempLast[3] * \
+                                                np.cos(tempLast[4])) * (tempLast[2] * (elementlengder[int(tempLast[1])] - tempLast[2]) ** 2)) \
+                                                / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende a
 
-            mom[int(tempLast[1])][1] += float(((tempLast[3]*np.cos(tempLast[4]))*((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) /(elementlengder[int(tempLast[1])])**2)                      # fim for ende b
-            lastVektor[int(elem[int(tempLast[1])][1])] -= float(((tempLast[3] * np.cos(tempLast[4])) * ((tempLast[2] ** 2) * (elementlengder[int(tempLast[1])] - tempLast[2]))) / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende b
+            mom[int(tempLast[1])][1] += float(((tempLast[3]*np.cos(tempLast[4]))* \
+                                                ((tempLast[2]**2)*(elementlengder[int(tempLast[1])]-tempLast[2]))) \
+                                                /(elementlengder[int(tempLast[1])])**2)                      # fim for ende b
+            lastVektor[int(elem[int(tempLast[1])][1])] -= float(((tempLast[3] * np.cos(tempLast[4])) * \
+                                                ((tempLast[2] ** 2) * (elementlengder[int(tempLast[1])] - tempLast[2]))) \
+                                                / (elementlengder[int(tempLast[1])]) ** 2)  # fim for ende b
 
         elif tempLast[0] == 2:  # Konsentrerte momenter i knutepunkt
             lastVektor[int(tempLast[1])] += float(tempLast[2])
@@ -172,7 +180,9 @@ def momentOgLastvektor(npunkt, punkt, nelem, elem, nlast, last, elementlengder):
 
 def treghetsMoment(profil):
     if profil == 1 or profil == 3: #returnerer I for I-profil med dimensjoner fra profiler.
-        return ((((profiler[int(profil)-1][2]-(2*profiler[int(profil)-1][0]))**3)*profiler[int(profil)-1][1])/12) + 2*((((profiler[int(profil)-1][0]**3)*profiler[int(profil)-1][3])/12)+(((profiler[int(profil)-1][2]-profiler[int(profil)-1][0])/2)**2)*(profiler[int(profil)-1][0]*profiler[int(profil)-1][3]))
+        return ((((profiler[int(profil)-1][2]-(2*profiler[int(profil)-1][0]))**3)*profiler[int(profil)-1][1])/12) \
+                + 2*((((profiler[int(profil)-1][0]**3)*profiler[int(profil)-1][3])/12)+(((profiler[int(profil)-1][2]-profiler[int(profil)-1][0])/2)**2) \
+                *(profiler[int(profil)-1][0]*profiler[int(profil)-1][3]))
     elif profil == 2 or profil == 4: #returnerer I for rør med dimensjoner fra profiler.
         return 2*np.pi*(profiler[int(profil)-1][0]**3)*(profiler[int(profil)-1][1])
     else:
