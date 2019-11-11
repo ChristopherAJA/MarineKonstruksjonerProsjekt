@@ -184,7 +184,7 @@ def treghetsMoment(profil):
                 + 2*((((profiler[int(profil)-1][0]**3)*profiler[int(profil)-1][3])/12)+(((profiler[int(profil)-1][2]-profiler[int(profil)-1][0])/2)**2) \
                 *(profiler[int(profil)-1][0]*profiler[int(profil)-1][3]))
     elif profil == 2 or profil == 4: #returnerer I for rør med dimensjoner fra profiler.
-        return 2*np.pi*(profiler[int(profil)-1][0]**3)*(profiler[int(profil)-1][1])
+        return (np.pi / 64)*((2*profiler[int(profil)-1][0])**4 - (2*profiler[int(profil)-1][0]-(2*profiler[int(profil)-1][1]))**4)
     else:
         print("feil profil")
         return 0
@@ -321,9 +321,10 @@ def main():
     #------Finner elementet med mest kritisk last-----
     kritiskBelastedBjelke(endemoment, mpLaster, elem)
 
-    prettyPrint(endemomentPrint)
+
+    prettyPrint(endemoment)
     prettyPrint(mpLaster)
-    #prettyPrint(Kn)
+
 
 
 main()
